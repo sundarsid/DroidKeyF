@@ -3,11 +3,13 @@ package com.example.sundar.droidkey;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
+import android.widget.ListView;
+import android.widget.SimpleCursorAdapter;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -34,11 +36,12 @@ public class LogDetail extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_detail);
          final AlertDialog alertDialog;
+        final ListView listView = (ListView) findViewById(R.id.listView_logs);
 
         Intent intent = this.getIntent();
         final String filename= intent.getStringExtra("name");
 
-        final TextView disfile = (TextView) findViewById(R.id.textView_dislog);
+
 
         alertDialog = new AlertDialog.Builder(this)
                 .setTitle("Please Wait")
@@ -60,11 +63,11 @@ public class LogDetail extends AppCompatActivity {
                         params[0] = url.toString();
                         params[1] = "Could not reach the lock. Check if the lock is in your network and turned on";
                         String hi = mgetLog.execute(params).get();
-                        if (!(hi.equals("NIL"))||hi==null) {
+                        if (!(hi.equals("NIL"))) {
+                            if(!(hi.equals(""))) {
 
-                            FileOutputStream fOut = new FileOutputStream(filename, true);
-                            fOut.write(hi.getBytes());
-                            fOut.close();
+                                MainActivity.mydb.insertLog(filename, hi);
+                            }
                         } else if (hi.equals("NIL")) {
                             break;
                         }
@@ -74,35 +77,26 @@ public class LogDetail extends AppCompatActivity {
                     }
 
                 }
-                String temp = "";
+                final Cursor cursor;
+                cursor = MainActivity.mydb.populate_list_logs(filename);
 
-                FileInputStream fin = null;
-                try {
-                    int c;
+                final String[] columns = new String[]{DBHelper.LOGS_COLUMNS_NAME, DBHelper.LOGS_COLUMNS_LOG};
+                final int[] to = new int[]{R.id.lock_list_textview_name, R.id.lock_list_textview_ip};
 
-                    fin = new FileInputStream(filename);
-                    InputStreamReader inputStreamReader = new InputStreamReader(fin);
-                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                    //StringBuilder sb = new StringBuilder();
-                    String line;
 
-                    while ((line = bufferedReader.readLine()) != null) {
-                        //sb.append(line);
-                        temp.concat(line);
-                    }
-//                    while ((c = fin.read()) != -1) {
-//                        temp = temp + Character.toString((char) c);
-//                    }
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                final String temp1 = temp;
+
+
+
+
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        disfile.setText(temp1);
+                        SimpleCursorAdapter logadapter;
+                        logadapter = new SimpleCursorAdapter(getApplicationContext(),R.layout.lock_list,cursor,columns,to);
+                        listView.setAdapter(logadapter);
+
+                        logadapter.changeCursor(cursor);
 
 
                     }
@@ -113,6 +107,7 @@ public class LogDetail extends AppCompatActivity {
 
             }
         }).start();
+
 
 
 
@@ -196,13 +191,13 @@ class getLog extends AsyncTask<String, Void, String> {
             flag=new Long(1);
         } catch (ClientProtocolException e) {
             // HTTP error
-            serverResponse = e.getMessage();
+           // serverResponse = e.getMessage();
             e.printStackTrace();
             Log.v("Hi", e.toString());
             flag=new Long(1);
         } catch (IOException e) {
             // IO error
-            serverResponse = e.getMessage();
+            //serverResponse = e.getMessage();
             e.printStackTrace();
             Log.v("Hi", e.toString());
             flag=new Long(1);

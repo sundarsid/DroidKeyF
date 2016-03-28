@@ -10,13 +10,10 @@
     tools:context="com.example.sundar.droidkey.LogDetail">
 
 
-
-    <TextView
+    <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="Large Text"
-        android:id="@+id/textView_dislog"
+        android:id="@+id/listView_logs"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />
 </RelativeLayout>

@@ -20,6 +20,8 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String LOCKS_COLUMN_ISADMIN = "isadmin";
     public static final String USERS_COLUMN_NAME ="uname";
     public static final String USERS_COLUMN_KEY ="ukey";
+    public static final String LOGS_COLUMNS_NAME ="uname";
+    public static final String LOGS_COLUMNS_LOG ="log";
 
 
     public DBHelper(Context context)
@@ -37,6 +39,10 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(
                 "create table users " +
                         "( _id integer primary key, uname text,ukey integer,lockno integer)"
+        );
+        db.execSQL(
+                "create table logs " +
+                        "( _id integer primary key, uname text,log text)"
         );
     }
 
@@ -70,6 +76,16 @@ public class DBHelper extends SQLiteOpenHelper {
         return true;
 
     }
+    public boolean insertLog(String name,String log)
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("uname", name);
+        contentValues.put("log", log);
+        db.insert("logs", null, contentValues);
+        return true;
+
+    }
 
     public Cursor populate_list_admin(){
         SQLiteDatabase db = this.getReadableDatabase();
@@ -85,6 +101,12 @@ public class DBHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor res =  db.rawQuery( "select * from users where lockno = "+lockNo, null );
         return res;
+    }
+    public Cursor populate_list_logs(String name){
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor res =  db.rawQuery("select * from logs where uname = " + '\''+name+'\'', null);
+        return res;
+
     }
 
 
