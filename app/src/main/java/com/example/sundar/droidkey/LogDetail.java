@@ -33,53 +33,91 @@ public class LogDetail extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_log_detail);
+         final AlertDialog alertDialog;
 
         Intent intent = this.getIntent();
-        String filename= intent.getStringExtra("name");
+        final String filename= intent.getStringExtra("name");
 
-        TextView disfile = (TextView) findViewById(R.id.textView_dislog);
+        final TextView disfile = (TextView) findViewById(R.id.textView_dislog);
 
+        alertDialog = new AlertDialog.Builder(this)
+                .setTitle("Please Wait")
+                .setCancelable(true)
+                .create();
+        alertDialog.setMessage("Retrieving log from device");
 
-        while(true){
-            URI url;
-            String[] params = new String[2];
-            try {
-                url = new URI("http://" + "192.168.4.1" + "/?Log");
-                getLog mgetLog = new getLog(this);
-                params[0]=url.toString();
-                params[1]="Could not reach the lock. Check if the lock is in your network and turned on";
-                String hi = mgetLog.execute(params).get();
-                if(!(hi.equals("NIL"))){
+            alertDialog.show();
 
-                    FileOutputStream fOut = openFileOutput(filename,MODE_PRIVATE);
-                    fOut.write(hi.getBytes());
-                    fOut.close();
-                }else if(hi.equals("NIL")){
-                    break;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    URI url;
+                    String[] params = new String[2];
+                    try {
+                        url = new URI("http://" + "192.168.4.1" + "/?Log");
+                        getLog mgetLog = new getLog(getApplicationContext());
+                        params[0] = url.toString();
+                        params[1] = "Could not reach the lock. Check if the lock is in your network and turned on";
+                        String hi = mgetLog.execute(params).get();
+                        if (!(hi.equals("NIL"))||hi==null) {
+
+                            FileOutputStream fOut = new FileOutputStream(filename, true);
+                            fOut.write(hi.getBytes());
+                            fOut.close();
+                        } else if (hi.equals("NIL")) {
+                            break;
+                        }
+                        Log.e("Hi", url.toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                 }
-                Log.e("Hi", url.toString());
-            } catch (Exception e) {
-                e.printStackTrace();
+                String temp = "";
+
+                FileInputStream fin = null;
+                try {
+                    int c;
+
+                    fin = new FileInputStream(filename);
+                    InputStreamReader inputStreamReader = new InputStreamReader(fin);
+                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                    //StringBuilder sb = new StringBuilder();
+                    String line;
+
+                    while ((line = bufferedReader.readLine()) != null) {
+                        //sb.append(line);
+                        temp.concat(line);
+                    }
+//                    while ((c = fin.read()) != -1) {
+//                        temp = temp + Character.toString((char) c);
+//                    }
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                final String temp1 = temp;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        disfile.setText(temp1);
+
+
+                    }
+                });
+
+                alertDialog.dismiss();
+
+
             }
+        }).start();
 
-        }
-        String temp="";
 
-        FileInputStream fin = null;
-        try {
-            int c;
 
-            fin = openFileInput(filename);
-            while( (c = fin.read()) != -1){
-                temp = temp + Character.toString((char)c);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        disfile.setText(temp);
+
 
 
 
@@ -88,7 +126,7 @@ public class LogDetail extends AppCompatActivity {
 
 class getLog extends AsyncTask<String, Void, String> {
 
-    private AlertDialog alertDialog;
+
     String serverResponse="";
     String line;
     String responsemsg;
@@ -98,10 +136,7 @@ class getLog extends AsyncTask<String, Void, String> {
     {
 
 
-        alertDialog = new AlertDialog.Builder(context)
-                .setTitle("Please Wait")
-                .setCancelable(true)
-                .create();
+
     }
 
 
@@ -112,11 +147,7 @@ class getLog extends AsyncTask<String, Void, String> {
 
 
 
-        alertDialog.setMessage("Retrieving log from device");
-        if(!alertDialog.isShowing())
-        {
-            alertDialog.show();
-        }
+
     }
 
     @Override
@@ -126,11 +157,7 @@ class getLog extends AsyncTask<String, Void, String> {
 
 
         // HttpURLConnection urlConnection = null;
-        alertDialog.setMessage("Retrieving log from device");
-        if(!alertDialog.isShowing())
-        {
-            alertDialog.show();
-        }
+
 
         try {
             HttpParams httpParameters = new BasicHttpParams();
@@ -188,15 +215,9 @@ class getLog extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String aVoid) {
         MainActivity.flagerror = flag.intValue();
 
-        if(flag==0) {
-            alertDialog.setMessage(responsemsg + serverResponse);
-        }else if(flag==1)
-            alertDialog.setMessage(serverResponse);
 
-        if(!alertDialog.isShowing())
-        {
-            alertDialog.show(); // show dialog
-        }
+
+
     }
 
 

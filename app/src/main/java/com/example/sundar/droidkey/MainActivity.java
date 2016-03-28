@@ -512,6 +512,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onClick(View v){
                         Intent intent = new Intent(v.getContext(),LogDetail.class);
                         intent.putExtra("name",ipaddress);
+                        startActivity(intent);
 //                        URI url;
 //                        String[] params = new String[2];
 //                        try {
